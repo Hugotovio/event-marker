@@ -1,0 +1,57 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: event_maker
+          POSTGRES_USER: event_maker
+          POSTGRES_PASSWORD: change_me
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U event_maker -d event_maker"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest httpx2
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql+psycopg://event_maker:change_me@localhost:5432/event_maker
+        run: |
+          alembic -c alembic.ini upgrade head
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql+psycopg://event_maker:change_me@localhost:5432/event_maker
+        run: |
+          python -m pytest backend/tests -v
