@@ -46,12 +46,22 @@ jobs:
 
       - name: Run database migrations
         env:
+          POSTGRES_DB: event_maker
+          POSTGRES_USER: event_maker
+          POSTGRES_PASSWORD: change_me
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"
           DATABASE_URL: postgresql+psycopg://event_maker:change_me@localhost:5432/event_maker
         run: |
           alembic -c alembic.ini upgrade head
 
       - name: Run tests
         env:
+          POSTGRES_DB: event_maker
+          POSTGRES_USER: event_maker
+          POSTGRES_PASSWORD: change_me
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"
           DATABASE_URL: postgresql+psycopg://event_maker:change_me@localhost:5432/event_maker
         run: |
           python -m pytest backend/tests -v
